@@ -13,7 +13,7 @@ while menu != "5":
     match menu:
 
         case "1":
-            funciones.dar_alta_libro(libros, ruta)
+            funciones.dar_alta_libro(libros, ruta, anio_actual)
 
         case "2":
             funciones.registrar_movimiento(libros, ruta)
