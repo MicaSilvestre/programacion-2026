@@ -1,5 +1,6 @@
 import random
  
+ 
 #-------------------------------------- GENERALES ------------------------------------------------------------
  
 def mostrar_menu() -> str:
@@ -100,9 +101,24 @@ def guardar_libros(ruta: str, libros: list) -> None:
  
 #-------------------------------------- ALTA DE LIBRO ------------------------------------------------------------
  
+def normalizar_isbn(isbn: str) -> str:
+    """
+    Normaliza un ISBN quitando los guiones y los espacios sobrantes, para poder compararlo
+    sin importar si fue ingresado con o sin guiones.\n
+    Parámetros:\n
+        - isbn (str): ISBN ingresado o almacenado.\n
+    Retorna:\n
+        - str: ISBN solo con los números (por ejemplo "9783161484100").
+    """
+    isbn_limpio = "".join(isbn.strip().split("-"))
+
+    return isbn_limpio
+
+
 def verificar_isbn_existente(libros: list, isbn: str) -> bool:
     """
-    Verifica si un ISBN ya se encuentra registrado en la lista de libros.\n
+    Verifica si un ISBN ya se encuentra registrado en la lista de libros
+    (con o sin guiones).\n
     Parámetros:\n
         - libros (list): lista de diccionarios con los libros registrados.
         - isbn (str): ISBN que se desea buscar.\n
@@ -110,12 +126,13 @@ def verificar_isbn_existente(libros: list, isbn: str) -> bool:
         - bool: True si el ISBN existe, False en caso contrario.
     """
     existe = False
- 
+    isbn_buscado = normalizar_isbn(isbn)
+
     for libro in libros:
-        if libro["isbn"] == isbn:
+        if normalizar_isbn(libro["isbn"]) == isbn_buscado:
             existe = True
             break
- 
+
     return existe
  
  
@@ -260,8 +277,48 @@ def pedir_entero(mensaje: str, minimo: int) -> int:
             print(f"¡ERROR! Debe ingresar un número entero mayor o igual a {minimo}.")
  
     return int(texto)
- 
- 
+
+
+def verificar_anio(texto: str, anio_actual: int) -> bool:
+    """
+    Verifica que el texto sea un año entero mayor a 1500 y que no supere el año actual.\n
+    Parámetros:\n
+        - texto (str): año ingresado por el usuario.
+        - anio_actual (int): año actual, que es el máximo permitido.\n
+    Retorna:\n
+        - bool: True si es válido, False en caso contrario.
+    """
+    valido = verificar_entero_valido(texto, 1501)
+
+    if valido == True:
+        if int(texto) > anio_actual:
+            valido = False
+
+    return valido
+
+
+def pedir_anio(mensaje: str, anio_actual: int) -> int:
+    """
+    Solicita el año de publicación hasta que sea mayor a 1500 y no supere el año actual.\n
+    Parámetros:\n
+        - mensaje (str): mensaje que se muestra al solicitar el año.
+        - anio_actual (int): año actual, que es el máximo permitido.\n
+    Retorna:\n
+        - int: año ingresado y validado.
+    """
+    texto = ""
+    valido = False
+
+    while valido == False:
+        texto = input(mensaje).strip()
+        valido = verificar_anio(texto, anio_actual)
+
+        if valido == False:
+            print(f"¡ERROR! Debe ingresar un año entre 1501 y {anio_actual}.")
+
+    return int(texto)
+
+
 def armar_mensaje_alta(isbn: str) -> str:
     """
     Arma el mensaje que informa que el libro fue agregado.\n
@@ -277,19 +334,20 @@ ISBN asignado: {isbn}"""
     return mensaje
  
  
-def dar_alta_libro(libros: list, ruta: str) -> None:
+def dar_alta_libro(libros: list, ruta: str, anio_actual: int) -> None:
     """
     Pide los datos de UN libro, genera su ISBN, lo agrega a la lista y actualiza el archivo CSV.\n
     Parámetros:\n
         - libros (list): lista de diccionarios con los libros registrados (se modifica).
         - ruta (str): ruta del archivo CSV.
+        - anio_actual (int): año actual, que es el máximo año de publicación permitido.
     """
     print("\n----- ALTA DE LIBRO -----")
  
     titulo = pedir_texto("Ingrese el título: ")
     autor = pedir_texto("Ingrese el autor: ")
     genero = pedir_genero("Ingrese el género: ")
-    anio = pedir_entero("Ingrese el año de publicación (mayor a 1500): ", 1501)
+    anio = pedir_anio(f"Ingrese el año de publicación (entre 1501 y {anio_actual}): ", anio_actual)
     stock = pedir_entero("Ingrese el stock disponible: ", 0)
     isbn = generar_isbn(libros)
  
@@ -342,9 +400,10 @@ def buscar_libro(libros: list, isbn: str) -> int:
         - int: posición del libro en la lista.
     """
     posicion = 0
- 
+    isbn_buscado = normalizar_isbn(isbn)
+
     for i in range(len(libros)):
-        if libros[i]["isbn"] == isbn:
+        if normalizar_isbn(libros[i]["isbn"]) == isbn_buscado:
             posicion = i
             break
  
